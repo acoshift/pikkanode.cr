@@ -1,13 +1,9 @@
 require "json"
 
-module Pikkanode
-  class Error
-    JSON.mapping(
-      error: String
-    )
+class Error
+  JSON.mapping(
+    error: String
+  )
 
-    def initialize(error : String)
-      @error = error
-    end
-  end
+  def initialize(@error) end
 end
