@@ -5,5 +5,7 @@ class Token
     user_id: String
   )
 
-  def initialize(@user_id) end
+  getter id : String = ""
+
+  def initialize(@id : String, @user_id) end
 end

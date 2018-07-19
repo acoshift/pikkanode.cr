@@ -1,34 +1,42 @@
 require "http/server"
-require "db"
 require "crypto/bcrypt"
-require "../error"
 require "./**"
 
 class App
-  def initialize(@port : Int32, @db : DB::Database)
-    @not_found = Handler::NotFound.new
-    @sign_up = Handler::SignUp.new @db
-    @sign_in = Handler::SignIn.new @db
+  def initialize(@port : Int32, repo : Repository)
+    @router = Router.new repo
   end
 
   def start
-    server = HTTP::Server.new do |context|
-      router(context)
-    end
+    server = HTTP::Server.new [
+      Middleware::Rescue.new,
+      @router,
+      Handler::NotFound.new
+    ]
 
     puts "Listening on http://0.0.0.0:#{@port}"
     server.listen(@port)
   end
+end
 
-  def router(context : HTTP::Server::Context)
+class Router < Handler::Base
+  def initialize(repo : Repository)
+    @sign_up = Handler::SignUp.new repo
+    @sign_in = Handler::SignIn.new repo
+    @sign_out = Handler::SignOut.new repo
+  end
+
+  def call(context)
     path = context.request.path
     case path
     when "/signup"
       @sign_up.call(context)
     when "/signin"
       @sign_in.call(context)
+    when "/signout"
+      @sign_out.call(context)
     else
-      @not_found.call(context)
+      call_next(context)
     end
   end
 end
